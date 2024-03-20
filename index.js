@@ -1,17 +1,27 @@
+const express = require("express");
+const app = express();
+app.get("/", (req, res) => {
+  res.send("Express on Vercel");
+});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 const getPosts = async (username, from) => {
   let res = await fetch("https://medium.com/_/graphql", {
-    "headers": {
+    headers: {
       "content-type": "application/json",
     },
-    "body": JSON.stringify([{
-      variables: {
-        homepagePostsFrom: from,
-        includeDistributedResponses: true,
-        id: null,
-        username,
-        homepagePostsLimit: 25
-      },
-      query: `query ProfilePubHandlerQuery($id: ID, $username: ID, $homepagePostsLimit: PaginationLimit, $homepagePostsFrom: String, $includeDistributedResponses: Boolean) {
+    body: JSON.stringify([
+      {
+        variables: {
+          homepagePostsFrom: from,
+          includeDistributedResponses: true,
+          id: null,
+          username,
+          homepagePostsLimit: 25,
+        },
+        query: `query ProfilePubHandlerQuery($id: ID, $username: ID, $homepagePostsLimit: PaginationLimit, $homepagePostsFrom: String, $includeDistributedResponses: Boolean) {
         userResult(id: $id, username: $username) {
           ... on User {
             id
@@ -66,47 +76,45 @@ const getPosts = async (username, from) => {
         previewContent {
             subtitle
         }
-      }`
-
-
-    }]),
-    "method": "POST"
-  })
-  const [{ data }] = await res.json()
-  return data
-}
+      }`,
+      },
+    ]),
+    method: "POST",
+  });
+  const [{ data }] = await res.json();
+  return data;
+};
 
 const getAllPosts = async (username, nextToken = null) => {
-  let data = await getPosts(username, nextToken)
-  data.userResult.homepagePostsConnection.posts.forEach(element => {
-    allPosts.push(element)
+  let data = await getPosts(username, nextToken);
+  data.userResult.homepagePostsConnection.posts.forEach((element) => {
+    allPosts.push(element);
   });
   console.log(data.userResult.homepagePostsConnection.pagingInfo);
   if (!data.userResult.homepagePostsConnection.pagingInfo.next) {
-    return allPosts
+    return allPosts;
   }
-  let foundNexttoken = data.userResult.homepagePostsConnection.pagingInfo.next.from
+  let foundNexttoken =
+    data.userResult.homepagePostsConnection.pagingInfo.next.from;
   if (!foundNexttoken) {
-    return allPosts
-
+    return allPosts;
   }
-  return getAllPosts(username, foundNexttoken)
-}
-let allPosts = []
+  return getAllPosts(username, foundNexttoken);
+};
+let allPosts = [];
 module.exports.handler = async (event) => {
-
-  let returnposts = []
+  let returnposts = [];
   if (allPosts.length > 0) {
-    returnposts = allPosts // caching
+    returnposts = allPosts; // caching
   } else {
-    returnposts = await getAllPosts('emilhein1') // USE YOUR USERNAME HERE
+    returnposts = await getAllPosts("emilhein1"); // USE YOUR USERNAME HERE
   }
 
   return {
     statusCode: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
     },
     body: JSON.stringify(returnposts),
   };
