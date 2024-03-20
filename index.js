@@ -1,21 +1,21 @@
 const express = require("express");
 const app = express();
-
-const getPosts = async (username, from) => {
-  let res = await fetch("https://medium.com/_/graphql", {
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify([
-      {
-        variables: {
-          homepagePostsFrom: from,
-          includeDistributedResponses: true,
-          id: null,
-          username,
-          homepagePostsLimit: 25,
-        },
-        query: `query ProfilePubHandlerQuery($id: ID, $username: ID, $homepagePostsLimit: PaginationLimit, $homepagePostsFrom: String, $includeDistributedResponses: Boolean) {
+app.get("/", function (req, res) {
+  const getPosts = async (username, from) => {
+    let res = await fetch("https://medium.com/_/graphql", {
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify([
+        {
+          variables: {
+            homepagePostsFrom: from,
+            includeDistributedResponses: true,
+            id: null,
+            username,
+            homepagePostsLimit: 25,
+          },
+          query: `query ProfilePubHandlerQuery($id: ID, $username: ID, $homepagePostsLimit: PaginationLimit, $homepagePostsFrom: String, $includeDistributedResponses: Boolean) {
         userResult(id: $id, username: $username) {
           ... on User {
             id
@@ -71,49 +71,49 @@ const getPosts = async (username, from) => {
             subtitle
         }
       }`,
-      },
-    ]),
-    method: "POST",
-  });
-  const [{ data }] = await res.json();
-  return data;
-};
-
-const getAllPosts = async (username, nextToken = null) => {
-  let data = await getPosts(username, nextToken);
-  data.userResult.homepagePostsConnection.posts.forEach((element) => {
-    allPosts.push(element);
-  });
-  console.log(data.userResult.homepagePostsConnection.pagingInfo);
-  if (!data.userResult.homepagePostsConnection.pagingInfo.next) {
-    return allPosts;
-  }
-  let foundNexttoken =
-    data.userResult.homepagePostsConnection.pagingInfo.next.from;
-  if (!foundNexttoken) {
-    return allPosts;
-  }
-  return getAllPosts(username, foundNexttoken);
-};
-let allPosts = [];
-module.exports.handler = async (event) => {
-  let returnposts = [];
-  if (allPosts.length > 0) {
-    returnposts = allPosts; // caching
-  } else {
-    returnposts = await getAllPosts("emilhein1"); // USE YOUR USERNAME HERE
-  }
-
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
-    },
-    body: JSON.stringify(returnposts),
+        },
+      ]),
+      method: "POST",
+    });
+    const [{ data }] = await res.json();
+    return data;
   };
-};
 
+  const getAllPosts = async (username, nextToken = null) => {
+    let data = await getPosts(username, nextToken);
+    data.userResult.homepagePostsConnection.posts.forEach((element) => {
+      allPosts.push(element);
+    });
+    console.log(data.userResult.homepagePostsConnection.pagingInfo);
+    if (!data.userResult.homepagePostsConnection.pagingInfo.next) {
+      return allPosts;
+    }
+    let foundNexttoken =
+      data.userResult.homepagePostsConnection.pagingInfo.next.from;
+    if (!foundNexttoken) {
+      return allPosts;
+    }
+    return getAllPosts(username, foundNexttoken);
+  };
+  let allPosts = [];
+  module.exports.handler = async (event) => {
+    let returnposts = [];
+    if (allPosts.length > 0) {
+      returnposts = allPosts; // caching
+    } else {
+      returnposts = await getAllPosts("emilhein1"); // USE YOUR USERNAME HERE
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify(returnposts),
+    };
+  };
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
