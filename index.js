@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(
   cors({
-    origin: "https://altanmia-web-h3xf.vercel.app/",
+    origin: "https://altanmia-web-h3xf.vercel.app/media",
   })
 );
 let allPosts = [];
