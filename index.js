@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(
   cors({
-    origin: "*",
+    origin: "https://altanmia-web-h3xf.vercel.app/",
   })
 );
 let allPosts = [];
@@ -117,7 +117,7 @@ app.get("/", async (req, res) => {
     if (allPosts.length > 0) {
       returnposts = allPosts; // caching
     } else {
-      returnposts = await getAllPosts("emilhein1"); // USE YOUR USERNAME HERE
+      returnposts = await getAllPosts("baytaltanmeya.bt"); // USE YOUR USERNAME HERE
     }
 
     res.status(200).json(returnposts);
